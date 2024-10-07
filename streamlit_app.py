@@ -3,6 +3,7 @@ import pandas as pd
 import math
 from pathlib import Path
 import numpy as np
+import pydeck as pdk
 
 # Set the title and favicon that appear in the Browser's tab bar.
 st.set_page_config(
@@ -36,8 +37,24 @@ def get_gdp_data():
 
     return raw_gdp_df
 
+@st.cache_data
+def get_ranstad_data():
+    """Grab GDP data from a CSV file.
+
+    This uses caching to avoid having to read the file every time. If we were
+    reading from an HTTP endpoint instead of a file, it's a good idea to set
+    a maximum age to the cache with the TTL argument: @st.cache_data(ttl='1d')
+    """
+
+    # Instead of a CSV on disk, you could read from an HTTP endpoint here too.
+    DATA_FILENAME = Path(__file__).parent/'data/Randstad.csv'
+    raw_gdp_df = pd.read_csv(DATA_FILENAME)
+
+    return raw_gdp_df
+
 gdp_df = get_gdp_data()
 
+stations = get_ranstad_data()
 # -----------------------------------------------------------------------------
 # Draw the actual page
 
@@ -51,6 +68,50 @@ But it's otherwise a great (and did I mention _free_?) source of data.
 '''
 
 # Add some spacing
+''
+st.map(stations[['Lat-coord', 'Lng-coord']].rename(columns={'Lat-coord': 'lat', 'Lng-coord': 'lon'}))
+
+
+
+''
+''
+# Define colors for Randstad values: blue for 0.0, red for 1.0
+def get_color(randstad):
+    if randstad == 0.0:
+        return [0, 0, 255]  # Blue for 0.0
+    else:
+        return [255, 0, 0]  # Red for 1.0
+
+stations['color'] = stations['Randstad'].apply(get_color)
+
+# Streamlit app title
+st.title('Station Locations with Randstad-based Colors')
+
+# Create pydeck Layer
+layer = pdk.Layer(
+    'ScatterplotLayer',
+    data=stations,
+    get_position='[Lng-coord, Lat-coord]',
+    get_color='color',  # Use the color column
+    get_radius=500,  # Radius of the markers
+    pickable=True,
+    filled=True
+)
+
+# Define the view (map zoom, center)
+view_state = pdk.ViewState(
+    latitude=stations['Lat-coord'].mean(),
+    longitude=stations['Lng-coord'].mean(),
+    zoom=5,
+    pitch=0
+)
+
+# Render the map using pydeck
+st.pydeck_chart(pdk.Deck(
+    layers=[layer],
+    initial_view_state=view_state,
+    tooltip={"text": "{Station}"}
+))
 ''
 ''
 
