@@ -69,52 +69,71 @@ But it's otherwise a great (and did I mention _free_?) source of data.
 
 # Add some spacing
 ''
-st.map(stations[['Lat-coord', 'Lng-coord']].rename(columns={'Lat-coord': 'lat', 'Lng-coord': 'lon'}))
-
+stations_randstad=stations[stations['Randstad']==1]
+stations_outside=stations[stations['Randstad']==0]
+st.map(stations_randstad[['Lat-coord', 'Lng-coord']].rename(columns={'Lat-coord': 'lat', 'Lng-coord': 'lon'}))
+st.map(stations_outside[['Lat-coord', 'Lng-coord']].rename(columns={'Lat-coord': 'lat', 'Lng-coord': 'lon'}))
 
 
 ''
 ''
-# Define colors for Randstad values: blue for 0.0, red for 1.0
-def get_color(randstad):
+data = {
+    'Station': ["Test Station 1", "Test Station 2"],
+    'Lat-coord': [52.379189, 51.9225],  # Coordinates for Amsterdam, Rotterdam
+    'Lng-coord': [4.899431, 4.47917],
+    'Randstad': [0.0, 1.0]  # Use Randstad values 0.0 and 1.0 for testing 
+}
+
+stations = pd.DataFrame(data)
+MAPBOX_API_KEY = "pk.eyJ1IjoibWF0aGlqc21hcmt1cyIsImEiOiJjbTIxa2V2aTUwcndwMmpyMXNlNTV3eDVvIn0.DfgcGtpDWwXyEB5nsQmeHA"
+
+# Clean data: remove any NaN or infinite values (if any)
+stations = stations.replace([float('inf'), float('-inf')], pd.NA).dropna(subset=['Lat-coord', 'Lng-coord'])
+
+# Define color mapping for Randstad
+def get_fill_color(randstad):
     if randstad == 0.0:
-        return [0, 0, 255]  # Blue for 0.0
+        return [0, 0, 255]  # Blue for Randstad 0.0
     else:
-        return [255, 0, 0]  # Red for 1.0
+        return [255, 0, 0]  # Red for Randstad 1.0
 
-stations['color'] = stations['Randstad'].apply(get_color)
+# Apply fill color mapping
+stations['fill_color'] = stations['Randstad'].apply(get_fill_color)
 
-# Streamlit app title
-st.title('Station Locations with Randstad-based Colors')
+# Debugging: print to check data
+st.write("Data Preview:")
+st.write(stations)
 
-# Create pydeck Layer
+# Create pydeck ScatterplotLayer
 layer = pdk.Layer(
     'ScatterplotLayer',
     data=stations,
-    get_position='[Lng-coord, Lat-coord]',
-    get_color='color',  # Use the color column
-    get_radius=500,  # Radius of the markers
+    get_position=['Lng-coord', 'Lat-coord'],  # Pass as list of column names
+    get_fill_color='fill_color',  # Use get_fill_color instead of deprecated get_color
+    get_radius=5000,  # Larger radius for visibility
     pickable=True,
     filled=True
 )
 
-# Define the view (map zoom, center)
+# View State (Center map around the Netherlands)
 view_state = pdk.ViewState(
-    latitude=stations['Lat-coord'].mean(),
-    longitude=stations['Lng-coord'].mean(),
-    zoom=5,
+    latitude=52.0,
+    longitude=5.0,
+    zoom=7,
     pitch=0
 )
 
-# Render the map using pydeck
+# Render the map with pydeck
 st.pydeck_chart(pdk.Deck(
     layers=[layer],
     initial_view_state=view_state,
-    tooltip={"text": "{Station}"}
+    #map_style='mapbox://styles/mapbox/light-v9'
+    map_style='mapbox://styles/mapbox/streets-v11'
 ))
-''
-''
 
+''
+''
+'''
 years = gdp_df['Jaar'].unique()
 
 if not len(years):
@@ -175,3 +194,5 @@ with right_column:
         'Sorting hat',
         ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
     st.write(f"You are in {chosen} house!")
+
+'''
