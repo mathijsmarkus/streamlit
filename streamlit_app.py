@@ -110,7 +110,7 @@ layer = pdk.Layer(
     data=stations,
     get_position=['Lng-coord', 'Lat-coord'],  # Pass as list of column names
     get_fill_color='fill_color',  # Use get_fill_color instead of deprecated get_color
-    get_radius=5000,  # Larger radius for visibility
+    get_radius=500,  # Larger radius for visibility
     pickable=True,
     filled=True
 )
