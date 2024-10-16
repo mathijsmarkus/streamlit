@@ -9,12 +9,15 @@ import streamlit as st
 def load_data():
     # Load multiple datasets
     df_hele_week = pd.read_csv("data/PlotDataHeleWeek.csv")
-    df_monday = pd.read_csv("data/PlotDataMonday.csv")  
+    df_monday = pd.read_csv("data/PlotDataMonday.csv")
+    df_tuesday = pd.read_csv("data/PlotDataTuesday.csv")  
     df_wednesday = pd.read_csv("data/PlotDataWednesday.csv")
     df_thursday = pd.read_csv("data/PlotDataThursday.csv")
     df_friday = pd.read_csv("data/PlotDataFriday.csv")
+    df_saturday = pd.read_csv("data/PlotDataSaturday.csv")
+    df_sunday = pd.read_csv("data/PlotDataSunday.csv")
     stations = pd.read_csv("data/Randstad-0.csv")
-    return df_hele_week, df_monday, df_wednesday, df_thursday, df_friday, stations
+    return df_hele_week, df_monday, df_tuesday, df_wednesday, df_thursday, df_friday, df_saturday, df_sunday, stations
 
 # Extract coordinates function with error handling for missing data
 def extract_coords(geometry_str):
@@ -70,12 +73,12 @@ def main():
               Different station types can be selected, as well as different transport operators.")
 
     # Load and process data
-    df_hele_week, df_monday, df_wednesday, df_thursday, df_friday, stations = load_data()
+    df_hele_week, df_monday, df_tuesday, df_wednesday, df_thursday, df_friday, df_saturday, df_sunday, stations = load_data()
 
     # Add a dropdown to select the day
     day_choice = st.sidebar.selectbox(
         "Select the day:",
-        options=['Hele Week', 'Monday', 'Wednesday', 'Thursday', 'Friday'],
+        options=['Hele Week', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
         index=0  # Default to 'Hele Week'
     )
 
@@ -84,12 +87,18 @@ def main():
         df_selected_day = df_hele_week
     elif day_choice == 'Monday':
         df_selected_day = df_monday
+    elif day_choice == 'Tuesday':
+        df_selected_day = df_tuesday
     elif day_choice == 'Wednesday':
         df_selected_day = df_wednesday
     elif day_choice == 'Thursday':
         df_selected_day = df_thursday
     elif day_choice == 'Friday':
         df_selected_day = df_friday
+    elif day_choice == 'Saturday':
+        df_selected_day = df_saturday
+    elif day_choice == 'Sunday':
+        df_selected_day = df_sunday
 
     df_selected_day = process_line_data(df_selected_day)
 
